@@ -552,54 +552,62 @@ document.addEventListener("DOMContentLoaded", () => {
     const shareActivityName = shareModal.querySelector("#share-activity-name");
     shareActivityName.textContent = activityName;
 
+    // Store share data on the modal element for access in handlers
+    shareModal.dataset.shareUrl = shareUrl;
+    shareModal.dataset.shareText = shareText;
+
     // Show modal
     shareModal.classList.remove("hidden");
     setTimeout(() => {
       shareModal.classList.add("show");
     }, 10);
 
-    // Set up button handlers
-    const copyLinkButton = shareModal.querySelector("#copy-link-button");
-    const twitterButton = shareModal.querySelector("#share-twitter-button");
-    const facebookButton = shareModal.querySelector("#share-facebook-button");
+    // Set up button handlers only once (check if already initialized)
+    if (!shareModal.dataset.initialized) {
+      const copyLinkButton = shareModal.querySelector("#copy-link-button");
+      const twitterButton = shareModal.querySelector("#share-twitter-button");
+      const facebookButton = shareModal.querySelector("#share-facebook-button");
 
-    // Copy link handler
-    copyLinkButton.onclick = async () => {
-      try {
-        await navigator.clipboard.writeText(shareUrl);
-        showMessage("Link copied to clipboard!", "success");
+      // Copy link handler
+      copyLinkButton.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(shareModal.dataset.shareUrl);
+          showMessage("Link copied to clipboard!", "success");
+          shareModal.classList.remove("show");
+          setTimeout(() => {
+            shareModal.classList.add("hidden");
+          }, 300);
+        } catch (error) {
+          showMessage("Failed to copy link", "error");
+        }
+      });
+
+      // Twitter share handler
+      twitterButton.addEventListener("click", () => {
+        const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+          shareModal.dataset.shareText
+        )}&url=${encodeURIComponent(shareModal.dataset.shareUrl)}`;
+        window.open(twitterUrl, "_blank");
         shareModal.classList.remove("show");
         setTimeout(() => {
           shareModal.classList.add("hidden");
         }, 300);
-      } catch (error) {
-        showMessage("Failed to copy link", "error");
-      }
-    };
+      });
 
-    // Twitter share handler
-    twitterButton.onclick = () => {
-      const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
-        shareText
-      )}&url=${encodeURIComponent(shareUrl)}`;
-      window.open(twitterUrl, "_blank");
-      shareModal.classList.remove("show");
-      setTimeout(() => {
-        shareModal.classList.add("hidden");
-      }, 300);
-    };
+      // Facebook share handler
+      facebookButton.addEventListener("click", () => {
+        const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+          shareModal.dataset.shareUrl
+        )}`;
+        window.open(facebookUrl, "_blank");
+        shareModal.classList.remove("show");
+        setTimeout(() => {
+          shareModal.classList.add("hidden");
+        }, 300);
+      });
 
-    // Facebook share handler
-    facebookButton.onclick = () => {
-      const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-        shareUrl
-      )}`;
-      window.open(facebookUrl, "_blank");
-      shareModal.classList.remove("show");
-      setTimeout(() => {
-        shareModal.classList.add("hidden");
-      }, 300);
-    };
+      shareModal.dataset.initialized = "true";
+    }
   }
 
   // Function to render a single activity card
